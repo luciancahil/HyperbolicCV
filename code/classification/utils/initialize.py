@@ -1,3 +1,5 @@
+from unittest import case
+
 import torch
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, Subset
@@ -89,11 +91,20 @@ def select_optimizer(model, args):
     else:
         raise "Optimizer not found. Wrong optimizer in configuration... -> " + args.model
 
-    lr_scheduler = None
-    if args.use_lr_scheduler:
-        lr_scheduler = MultiStepLR(
-            optimizer, milestones=args.lr_scheduler_milestones, gamma=args.lr_scheduler_gamma
-        )
+
+
+    if args.lr_type == None:
+        lr_scheduler = None
+    elif args.lr_type == 'cosine':
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.num_epochs)
+    elif args.lr_type == 'step':
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_epochs, gamma=args.lr_factor)
+    elif args.lr_type == 'exponential':
+        lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=args.lr_factor)
+    elif args.lr_type == 'plateau':
+        lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=args.lr_factor, patience=args.lr_epochs)
+    elif args.lr_type == 'gradient':
+        lr_scheduler = None # TODO: Implement Gradient Method LR scheduler
         
 
     return optimizer, lr_scheduler

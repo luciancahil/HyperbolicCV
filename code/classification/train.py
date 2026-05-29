@@ -62,6 +62,16 @@ def getArguments():
     parser.add_argument('--optimizer', default="RiemannianSGD", type=str,
                         choices=["RiemannianAdam", "RiemannianSGD", "Adam", "SGD"],
                         help="Optimizer for training.")
+    
+    parser.add_argument('--lr_type', default=None, type=str, choices=[None, "cosine", "step", "exponential", "plateau", "gradient"],
+                        help="Learning rate schedule type.")
+    
+    parser.add_argument('--lr_factor', default=0.1, type=float,
+                        help="Factor for learning rate reduction in LR scheduler. Only used for step, exponential and plateau LR schedulers.")
+    
+    parser.add_argument('--lr_epochs', default=10, type=int,
+                        help="Epochs when learning rate is reduced by factor in step LR scheduler or when validation loss plateaus in plateau LR scheduler.")
+
     parser.add_argument('--use_lr_scheduler', action='store_true',
                         help="If learning rate should be reduced after step epochs using a LR scheduler.")
     parser.add_argument('--lr_scheduler_milestones', default=[60, 120, 160], type=int, nargs="+",
@@ -132,6 +142,8 @@ def main(args):
 
     print("Creating optimizer...")
     optimizer, lr_scheduler = select_optimizer(model, args)
+    print(lr_scheduler)
+    breakpoint()
     criterion = torch.nn.CrossEntropyLoss()
 
     start_epoch = 0
