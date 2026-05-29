@@ -1,6 +1,6 @@
 import torch
 from torchvision import datasets, transforms
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 
 from lib.geoopt import ManifoldParameter
 from lib.geoopt.optim import RiemannianAdam, RiemannianSGD
@@ -231,6 +231,10 @@ def select_dataset(args, validation_split=False):
         raise "Selected dataset '{}' not available.".format(args.dataset)
     
     # Dataloader
+    if(args.train_size is not None):
+        train_set = Subset(train_set, list(range(args.train_size)))
+        test_set = Subset(test_set, list(range(args.train_size)))
+
     train_loader = DataLoader(train_set, 
         batch_size=args.batch_size, 
         num_workers=8, 

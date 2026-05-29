@@ -1,5 +1,6 @@
 # -----------------------------------------------------
 # Change working directory to parent HyperbolicCV/code
+from ast import parse
 import os
 import sys
 
@@ -73,7 +74,7 @@ def getArguments():
                         help="Validation/Testing batch size.")
 
     # Model selection
-    parser.add_argument('--num_layers', default=18, type=int, choices=[18, 50],
+    parser.add_argument('--num_layers', default=18, type=int,
                         help="Number of layers in ResNet.")
     parser.add_argument('--embedding_dim', default=512, type=int,
                         help="Dimensionality of classification embedding space (could be expanded by ResNet)")
@@ -97,6 +98,9 @@ def getArguments():
                         choices=["MNIST", "CIFAR-10", "CIFAR-100", "Tiny-ImageNet"],
                         help="Select a dataset.")
 
+    parser.add_argument('--train_size', default=None, type=int,
+                        help="Set a training size for smaller training runs (for debugging).")
+
     args = parser.parse_args()
 
     return args
@@ -104,7 +108,10 @@ def getArguments():
 
 def main(args):
     device = args.device[0]
-    torch.cuda.set_device(device)
+
+
+    if (device != 'cpu'):
+        torch.cuda.set_device(device)
     torch.cuda.empty_cache()
 
     print("Running experiment: " + args.exp_name)

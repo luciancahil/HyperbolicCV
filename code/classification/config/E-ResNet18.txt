@@ -11,7 +11,7 @@ seed = 1
 #load_checkpoint = classification/output/E-ResNet18.pth
 
 # General training hyperparameters
-num_epochs = 200
+num_epochs = 100
 batch_size = 128
 lr = 1e-1
 weight_decay = 5e-4
@@ -25,7 +25,7 @@ batch_size_test = 128
 
 # Model selection
 num_layers = 18
-embedding_dim = 512
+embedding_dim = 16
 encoder_manifold = euclidean
 decoder_manifold = euclidean
 
