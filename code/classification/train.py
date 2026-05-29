@@ -4,6 +4,8 @@ from ast import parse
 import os
 import sys
 
+from utils.CosSimScheduler import CosSimScheduler
+
 working_dir = os.path.join(os.path.realpath(os.path.dirname(__file__)), "../")
 os.chdir(working_dir)
 
@@ -63,7 +65,7 @@ def getArguments():
                         choices=["RiemannianAdam", "RiemannianSGD", "Adam", "SGD"],
                         help="Optimizer for training.")
     
-    parser.add_argument('--lr_type', default=None, type=str, choices=[None, "cosine", "step", "exponential", "plateau", "gradient"],
+    parser.add_argument('--lr_type', default=None, type=str, choices=[None, "cosine", "step", "exponential", "plateau", "cos_sim"],
                         help="Learning rate schedule type.")
     
     parser.add_argument('--lr_factor', default=0.1, type=float,
@@ -143,7 +145,6 @@ def main(args):
     print("Creating optimizer...")
     optimizer, lr_scheduler = select_optimizer(model, args)
     print(lr_scheduler)
-    breakpoint()
     criterion = torch.nn.CrossEntropyLoss()
 
     start_epoch = 0
@@ -198,6 +199,13 @@ def main(args):
                     print("Skipped lr drop for manifold parameters")
 
                 lr_scheduler.step()
+            
+            if isinstance(lr_scheduler, CosSimScheduler):
+                # Get cosine similarity of gradients for manifold parameters
+                # cos_sim = optimizer.param_groups[1]['params'][0].grad.cosine_similarity(optimizer.param_groups[1]['params'][0], dim=0).item()
+                cos_sim = epoch
+                lr_scheduler.cos_step(cos_sim)
+                print("Cosine similarity of gradients for manifold parameters: {:.4f}".format(cos_sim))
 
             loss_val, acc1_val, acc5_val = evaluate(model, val_loader, criterion, device)
 

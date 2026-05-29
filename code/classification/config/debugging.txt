@@ -15,11 +15,11 @@ num_epochs = 100
 batch_size = 128
 lr = 1e-1
 weight_decay = 5e-4
-optimizer = SGD
+optimizer = Adam
 
 
 # :LR scheduling hyperparameters
-lr_type = gradient
+lr_type = cos_sim
 lr_epochs = 10
 lr_factor = 0.1
 

@@ -10,6 +10,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 
 from models.classifier import ResNetClassifier
 
+from .CosSimScheduler import CosSimScheduler
 
 def load_checkpoint(model, optimizer, lr_scheduler, args):
     """ Loads a checkpoint from file-system. """
@@ -103,8 +104,8 @@ def select_optimizer(model, args):
         lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=args.lr_factor)
     elif args.lr_type == 'plateau':
         lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=args.lr_factor, patience=args.lr_epochs)
-    elif args.lr_type == 'gradient':
-        lr_scheduler = None # TODO: Implement Gradient Method LR scheduler
+    elif args.lr_type == 'cos_sim':
+        lr_scheduler = CosSimScheduler(optimizer)
         
 
     return optimizer, lr_scheduler
