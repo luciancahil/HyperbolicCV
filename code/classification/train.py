@@ -215,19 +215,21 @@ def main(args):
         last_gradients = cur_gradients 
         # ------- Start validation and logging -------
         with torch.no_grad():
-            if lr_scheduler is not None:
+            if isinstance(lr_scheduler, CosSimScheduler):
+                # Get cosine similarity of gradients for manifold parameters
+                # cos_sim = optimizer.param_groups[1]['params'][0].grad.cosine_similarity(optimizer.param_groups[1]['params'][0], dim=0).item()
+                lr_scheduler.cos_step(cosine_sim)
+
+            
+            elif lr_scheduler is not None:
                 if (epoch + 1) == args.lr_scheduler_milestones[0]:  # skip the first drop for some Parameters
                     optimizer.param_groups[1]['lr'] *= (1 / args.lr_scheduler_gamma) # Manifold params
                     print("Skipped lr drop for manifold parameters")
 
                 lr_scheduler.step()
             
-            if isinstance(lr_scheduler, CosSimScheduler):
-                # Get cosine similarity of gradients for manifold parameters
-                # cos_sim = optimizer.param_groups[1]['params'][0].grad.cosine_similarity(optimizer.param_groups[1]['params'][0], dim=0).item()
-                lr_scheduler.cos_step(cosine_sim)
-
             loss_val, acc1_val, acc5_val = evaluate(model, val_loader, criterion, device)
+
 
 
             print(

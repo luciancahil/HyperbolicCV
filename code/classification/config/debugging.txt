@@ -20,7 +20,7 @@ optimizer = Adam
 
 # :LR scheduling hyperparameters
 # choices=[None, "cosine", "step", "exponential", "plateau", "cos_sim"]
-#lr_type = exponential
+lr_type = cos_sim
 lr_epochs = 10
 lr_factor = 0.99
 
