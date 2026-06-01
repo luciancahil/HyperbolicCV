@@ -172,11 +172,10 @@ def main(args):
 
     cosine_sim = None
 
-    # The state dict we return to if loss increases by more than 2x when using co-sim scheduler
-    checkpoint_state_dict = copy.deepcopy(model.state_dict())
+
 
     for epoch in range(start_epoch, args.num_epochs):
-        if(epoch % 20 == 19):
+        if(epoch % 20 == 0):
             checkpoint_state_dict = copy.deepcopy(model.state_dict())
 
         cur_gradients = None 
@@ -234,7 +233,7 @@ def main(args):
 
                 if(loss_ratio > 2):
                     model.load_state_dict(checkpoint_state_dict)
-                    print("Loss increased by more than 2x. Restarting with lower Learning Rate")
+                    print("Loss increased by more than 2x. Returning to previous model checkpoint.")
 
 
             
