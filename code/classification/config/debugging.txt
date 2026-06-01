@@ -11,9 +11,9 @@ seed = 12
 #load_checkpoint = classification/output/E-ResNet18.pth
 
 # General training hyperparameters
-num_epochs = 200
+num_epochs = 300
 batch_size = 128
-lr = 1e-5
+lr = 1e-10
 weight_decay = 5e-4
 optimizer = Adam
 

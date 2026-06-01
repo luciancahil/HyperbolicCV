@@ -3,6 +3,7 @@
 from ast import parse
 import os
 import sys
+import copy
 
 from utils.CosSimScheduler import CosSimScheduler
 
@@ -166,10 +167,13 @@ def main(args):
 
     last_gradients = None
     gradient_cosines = []
-    loss_list = []
+    loss_list = [10e10, 10e10] # Start with a very high loss for the first loss ratio calculation
 
 
     cosine_sim = None
+
+    # The state dict from 2 epochs ago
+    original_state_dict = copy.deepcopy(model.state_dict())
 
     for epoch in range(start_epoch, args.num_epochs):
         cur_gradients = None 
@@ -207,6 +211,7 @@ def main(args):
 
             global_step += 1
             # ------- End iteration -------
+        
         if last_gradients is not None: 
             cosine_sim = F.cosine_similarity(cur_gradients, last_gradients, dim=0).item()
 
@@ -214,11 +219,20 @@ def main(args):
         
         last_gradients = cur_gradients 
         # ------- Start validation and logging -------
+        loss_list.append(losses.avg)
         with torch.no_grad():
+            loss_ratio = loss_list[-1]/loss_list[-2]
+
+
             if isinstance(lr_scheduler, CosSimScheduler):
                 # Get cosine similarity of gradients for manifold parameters
                 # cos_sim = optimizer.param_groups[1]['params'][0].grad.cosine_similarity(optimizer.param_groups[1]['params'][0], dim=0).item()
-                lr_scheduler.cos_step(cosine_sim)
+                lr_scheduler.cos_step(cosine_sim, loss_ratio)
+
+                if(loss_ratio > 2):
+                    model.load_state_dict(original_state_dict)
+                    print("Loss increased by more than 2x. Restarting with lower Learning Rate")
+
 
             
             elif lr_scheduler is not None:
@@ -235,8 +249,7 @@ def main(args):
             print(
                 "Epoch {}/{}: Loss={:.4f}, Acc@1={:.4f}, Acc@5={:.4f}, Validation: Loss={:.4f}, Acc@1={:.4f}, Acc@5={:.4f}, CoSim={:.4f}, LR={:.4e}".format(
                     epoch + 1, args.num_epochs, losses.avg, acc1.avg, acc5.avg, loss_val, acc1_val, acc5_val,  cosine_sim if cosine_sim is not None else float("nan"), lr_scheduler.get_last_lr()[0]  if lr_scheduler is not None else args.lr))
-
-            loss_list.append(losses.avg)
+            
             # Testing for best model
             if acc1_val > best_acc:
                 best_acc = acc1_val
@@ -250,6 +263,7 @@ def main(args):
                         'epoch': epoch,
                         'args': args,
                     }, save_path)
+
         # ------- End validation and logging -------
 
     print("-----------------\nTraining finished\n-----------------")
@@ -275,7 +289,7 @@ def main(args):
         loss_test, acc1_test, acc5_test))
 
     print(gradient_cosines)
-    print(loss_list)
+    print(loss_list[2:]) # Skip the first two loss values which are just placeholders for the initial loss ratio calculation
 
     print("Testing best model...")
     if args.output_dir is not None:

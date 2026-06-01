@@ -17,23 +17,23 @@ class CosSimScheduler(LRScheduler):
 
  
 
-    def cos_step(self, cos_sim=None):
+    def cos_step(self, cos_sim=None, loss_ratio = 0):
         self.cos_sim = cos_sim
+        self.loss_ratio = loss_ratio
         self.step()
         self.cos_sim = None
+        self.loss_ratio = None
 
 
     def get_lr(self):
 
         if(self.cos_sim is None):
             gamma = 1
+        elif(self.loss_ratio > 2):
+            gamma = 0.01
         elif(self.cos_sim > 0):
             gamma = self.increase_gamma
         else:
             gamma = self.decrease_gamma
 
-        print(self.cos_sim)
-        print(gamma)
-
-        print("\n\n")
         return [group['lr'] * gamma for group in self.optimizer.param_groups]
