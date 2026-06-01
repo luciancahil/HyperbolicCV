@@ -6,8 +6,8 @@ class CosSimScheduler(LRScheduler):
     cos_sim = None
 
     phi = (1 + math.sqrt(5)) / 2
-    increase_gamma = phi
-    decrease_gamma = 2 / (phi**2 + math.sqrt(phi**4 + 4*phi**2))   
+    increase_gamma = 1.1
+    decrease_gamma = 0.2
 
     def __init__(self, optimizer: Optimizer, last_epoch=-1):
         super(CosSimScheduler, self).__init__(optimizer, last_epoch)
@@ -20,7 +20,7 @@ class CosSimScheduler(LRScheduler):
     def cos_step(self, cos_sim=None):
         self.cos_sim = cos_sim
         self.step()
-        self.cos_sim is None
+        self.cos_sim = None
 
 
     def get_lr(self):
@@ -33,5 +33,7 @@ class CosSimScheduler(LRScheduler):
             gamma = self.decrease_gamma
 
         print(self.cos_sim)
-        breakpoint()
+        print(gamma)
+
+        print("\n\n")
         return [group['lr'] * gamma for group in self.optimizer.param_groups]

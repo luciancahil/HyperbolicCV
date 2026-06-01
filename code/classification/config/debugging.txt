@@ -7,21 +7,22 @@ exp_name = E-ResNet18
 # General settings
 device = cpu
 dtype = float32
-seed = 1
+seed = 12
 #load_checkpoint = classification/output/E-ResNet18.pth
 
 # General training hyperparameters
-num_epochs = 100
+num_epochs = 200
 batch_size = 128
-lr = 1e-1
+lr = 1e-5
 weight_decay = 5e-4
 optimizer = Adam
 
 
 # :LR scheduling hyperparameters
-lr_type = cos_sim
+# choices=[None, "cosine", "step", "exponential", "plateau", "cos_sim"]
+#lr_type = exponential
 lr_epochs = 10
-lr_factor = 0.1
+lr_factor = 0.99
 
 
 # General validation/testing hyperparameters
