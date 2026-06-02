@@ -12,8 +12,8 @@ seed = 12
 
 # General training hyperparameters
 num_epochs = 300
-batch_size = 128
-lr = 1e1
+batch_size = 16
+lr = 1e-8
 weight_decay = 5e-4
 optimizer = Adam
 
@@ -22,11 +22,11 @@ optimizer = Adam
 # choices=[None, "cosine", "step", "exponential", "plateau", "cos_sim"]
 lr_type = cos_sim
 lr_epochs = 10
-lr_factor = 0.99
+lr_factor = 0.95
 
 
 # General validation/testing hyperparameters
-batch_size_test = 128
+batch_size_test = 16
 
 # Model selection
 num_layers = 18
@@ -35,7 +35,7 @@ encoder_manifold = euclidean
 decoder_manifold = euclidean
 
 # Dataset settings
-dataset = CIFAR-10 # CIFAR-10 or Tiny-ImageNet
+dataset = Tiny-ImageNet # CIFAR-10 or Tiny-ImageNet or CIFAR-100
 
 
 # How many samples we use for debugging

@@ -224,6 +224,9 @@ def main(args):
         loss_list.append(losses.avg)
         with torch.no_grad():
             loss_ratio = loss_list[-1]/loss_list[-2]
+            if(loss_ratio > 2):
+                model.load_state_dict(checkpoint_state_dict)
+                print("Loss increased by more than 2x. Returning to previous model checkpoint.")
 
 
             if isinstance(lr_scheduler, CosSimScheduler):
@@ -231,9 +234,6 @@ def main(args):
                 # cos_sim = optimizer.param_groups[1]['params'][0].grad.cosine_similarity(optimizer.param_groups[1]['params'][0], dim=0).item()
                 lr_scheduler.cos_step(cosine_sim, loss_ratio)
 
-                if(loss_ratio > 2):
-                    model.load_state_dict(checkpoint_state_dict)
-                    print("Loss increased by more than 2x. Returning to previous model checkpoint.")
 
 
             
