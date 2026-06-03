@@ -183,7 +183,28 @@ def main(args):
             model.load_state_dict(torch.load(checkpoint_path), strict=False)
             print("Loaded checkpoint from " + checkpoint_path)
         
+    losses = AverageMeter("Loss", ":.4e")
+    acc1 = AverageMeter("Acc@1", ":6.2f")
+    acc5 = AverageMeter("Acc@5", ":6.2f")
 
+
+
+
+    for i, (x, y) in tqdm(enumerate(train_loader)):
+        # ------- Start iteration -------
+        x = x.to(device)
+        y = y.to(device)
+
+        logits = model(x)
+        loss = criterion(logits, y)
+
+        with torch.no_grad():
+            top1, top5 = accuracy(logits, y, topk=(1, 5))
+            losses.update(loss.item())
+            acc1.update(top1.item())
+            acc5.update(top5.item())
+
+    loss_list.append(max(losses.avg, 1e-10)) # Add current loss to loss list for loss ratio calculation, avoid division by zero with small constant
 
     for epoch in range(start_epoch, args.num_epochs):
         if(epoch % 20 == 0):
@@ -199,6 +220,7 @@ def main(args):
         losses = AverageMeter("Loss", ":.4e")
         acc1 = AverageMeter("Acc@1", ":6.2f")
         acc5 = AverageMeter("Acc@5", ":6.2f")
+
 
         for i, (x, y) in tqdm(enumerate(train_loader)):
             # ------- Start iteration -------
@@ -238,13 +260,13 @@ def main(args):
         # ------- Start validation and logging -------
         loss_list.append(max(losses.avg, 1e-10)) # Add current loss to loss list for loss ratio calculation, avoid division by zero with small constant
         with torch.no_grad():
-            print(loss_list)
             loss_ratio = loss_list[-1]/loss_list[-2]
 
             loss_val, acc1_val, acc5_val = evaluate(model, val_loader, criterion, device)
-            if(loss_ratio > 2):
+            if(loss_ratio > 5):
                 model.load_state_dict(checkpoint_state_dict)
                 print("Loss increased by more than 2x. Returning to previous model checkpoint.")
+                loss_list = loss_list[:-1] # Remove the last loss value which caused the increase for the next loss ratio calculation
 
 
             if isinstance(lr_scheduler, CosSimScheduler):
