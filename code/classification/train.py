@@ -69,7 +69,7 @@ def getArguments():
                         choices=["RiemannianAdam", "RiemannianSGD", "Adam", "SGD"],
                         help="Optimizer for training.")
     
-    parser.add_argument('--lr_type', default=None, type=str, choices=[None, "cosine", "step", "exponential", "plateau", "cos_sim"],
+    parser.add_argument('--lr_type', default=None, type=str, choices=[None, "None", "cosine", "step", "exponential", "plateau", "cos_sim"],
                         help="Learning rate schedule type.")
     
     parser.add_argument('--lr_factor', default=0.1, type=float,

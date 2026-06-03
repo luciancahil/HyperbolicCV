@@ -94,7 +94,7 @@ def select_optimizer(model, args):
 
 
 
-    if args.lr_type == None:
+    if args.lr_type == 'None':
         lr_scheduler = None
     elif args.lr_type == 'cosine':
         lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.num_epochs)
