@@ -40,6 +40,8 @@ def getArguments():
                         help="Name of the experiment.")
     parser.add_argument('--output_dir', default=None, type=str,
                         help="Path for output files (relative to working directory).")
+    parser.add_argument('--checkpoint_dir', default=None, type=str,
+                        help="Path for model checkpoints (relative to working directory).")
 
     # General settings
     parser.add_argument('--device', default="cuda:0",
@@ -172,11 +174,25 @@ def main(args):
 
     cosine_sim = None
 
+    checkpoint_path = os.path.join(args.checkpoint_dir, "checkpoint.pth")
+
+    if(args.checkpoint_dir is not None and not os.path.exists(args.checkpoint_dir)):
+        print("Create missing checkpoint directory...")
+        os.mkdir(args.checkpoint_dir)
+    else:
+        if(os.path.exists(checkpoint_path)):
+            model.load_state_dict(torch.load(checkpoint_path), strict=False)
+            print("Loaded checkpoint from " + checkpoint_path)
+        
 
 
     for epoch in range(start_epoch, args.num_epochs):
         if(epoch % 20 == 0):
             checkpoint_state_dict = copy.deepcopy(model.state_dict())
+
+            if(args.checkpoint_dir is not None):
+                torch.save(checkpoint_state_dict, checkpoint_path)
+                print("Saved checkpoint to " + checkpoint_path)
 
         cur_gradients = None 
         model.train()

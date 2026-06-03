@@ -242,11 +242,11 @@ def select_dataset(args, validation_split=False):
     else:
         raise "Selected dataset '{}' not available.".format(args.dataset)
     
-    # Dataloader
     if(args.train_size is not None):
         train_set = Subset(train_set, list(range(args.train_size)))
         test_set = Subset(test_set, list(range(args.train_size)))
-
+    
+    # Dataloader
     train_loader = DataLoader(train_set, 
         batch_size=args.batch_size, 
         num_workers=8, 

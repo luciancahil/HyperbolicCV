@@ -2,7 +2,8 @@
 
 # Output settings
 exp_name = E-ResNet18
-#output_dir = classification/output
+output_dir = classification/output
+checkpoint_dir = classification/checkpoints/debugging
 
 # General settings
 device = cpu
@@ -13,7 +14,7 @@ seed = 12
 # General training hyperparameters
 num_epochs = 300
 batch_size = 16
-lr = 1e-8
+lr = 5e-2
 weight_decay = 5e-4
 optimizer = Adam
 
@@ -26,7 +27,7 @@ lr_factor = 0.95
 
 
 # General validation/testing hyperparameters
-batch_size_test = 16
+batch_size_test = 128
 
 # Model selection
 num_layers = 18
