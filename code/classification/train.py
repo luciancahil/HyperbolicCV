@@ -6,7 +6,6 @@ import sys
 import copy
 
 from utils.CosSimScheduler import CosSimScheduler
-
 working_dir = os.path.join(os.path.realpath(os.path.dirname(__file__)), "../")
 os.chdir(working_dir)
 
@@ -237,9 +236,12 @@ def main(args):
         
         last_gradients = cur_gradients 
         # ------- Start validation and logging -------
-        loss_list.append(losses.avg)
+        loss_list.append(max(losses.avg, 1e-10)) # Add current loss to loss list for loss ratio calculation, avoid division by zero with small constant
         with torch.no_grad():
+            print(loss_list)
             loss_ratio = loss_list[-1]/loss_list[-2]
+
+            loss_val, acc1_val, acc5_val = evaluate(model, val_loader, criterion, device)
             if(loss_ratio > 2):
                 model.load_state_dict(checkpoint_state_dict)
                 print("Loss increased by more than 2x. Returning to previous model checkpoint.")
@@ -258,9 +260,8 @@ def main(args):
                     optimizer.param_groups[1]['lr'] *= (1 / args.lr_scheduler_gamma) # Manifold params
                     print("Skipped lr drop for manifold parameters")
 
-                lr_scheduler.step()
+                lr_scheduler.step(epoch)
             
-            loss_val, acc1_val, acc5_val = evaluate(model, val_loader, criterion, device)
 
 
 
