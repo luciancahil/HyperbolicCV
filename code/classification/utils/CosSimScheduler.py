@@ -31,7 +31,7 @@ class CosSimScheduler(LRScheduler):
             gamma = 1
         elif(self.loss_ratio > 2):
             gamma = 0.01
-        elif(self.cos_sim > 0):
+        elif(self.cos_sim > -0.1):
             gamma = self.increase_gamma
         else:
             gamma = self.decrease_gamma

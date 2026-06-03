@@ -188,6 +188,7 @@ def main(args):
     acc5 = AverageMeter("Acc@5", ":6.2f")
 
 
+    model.eval()
 
 
     for i, (x, y) in tqdm(enumerate(train_loader)):
@@ -203,6 +204,8 @@ def main(args):
             losses.update(loss.item())
             acc1.update(top1.item())
             acc5.update(top5.item())
+    
+    model.train()
 
     loss_list.append(max(losses.avg, 1e-10)) # Add current loss to loss list for loss ratio calculation, avoid division by zero with small constant
 

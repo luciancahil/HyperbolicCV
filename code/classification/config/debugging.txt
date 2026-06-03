@@ -8,13 +8,13 @@ checkpoint_dir = classification/checkpoints/debugging
 # General settings
 device = cpu
 dtype = float32
-seed = 12
+seed = 1
 #load_checkpoint = classification/output/E-ResNet18.pth
 
 # General training hyperparameters
 num_epochs = 300
-batch_size = 16
-lr = 1e1
+batch_size = 32
+lr = 1e0
 weight_decay = 5e-4
 optimizer = Adam
 
@@ -23,7 +23,7 @@ optimizer = Adam
 # choices=[None, "cosine", "step", "exponential", "plateau", "cos_sim"]
 lr_type = cos_sim
 lr_epochs = 10
-lr_factor = 0.95
+lr_factor = 0.96
 
 
 # General validation/testing hyperparameters
@@ -40,4 +40,4 @@ dataset = CIFAR-10 # CIFAR-10 or Tiny-ImageNet or CIFAR-100
 
 
 # How many samples we use for debugging
-train_size = 32
+train_size = 64
