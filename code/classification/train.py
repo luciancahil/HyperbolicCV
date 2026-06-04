@@ -173,7 +173,7 @@ def main(args):
 
     cosine_sim = None
 
-    checkpoint_path = os.path.join(args.checkpoint_dir, "checkpoint.pth")
+    checkpoint_path = os.path.join(args.checkpoint_dir, f"{args.exp_name}_checkpoint.pth")
 
     if(args.checkpoint_dir is not None and not os.path.exists(args.checkpoint_dir)):
         print("Create missing checkpoint directory...")
@@ -266,7 +266,7 @@ def main(args):
             loss_ratio = loss_list[-1]/loss_list[-2]
 
             loss_val, acc1_val, acc5_val = evaluate(model, val_loader, criterion, device)
-            if(loss_ratio > 5):
+            if(loss_ratio > 2):
                 model.load_state_dict(checkpoint_state_dict)
                 print("Loss increased by more than 2x. Returning to previous model checkpoint.")
                 loss_list = loss_list[:-1] # Remove the last loss value which caused the increase for the next loss ratio calculation
