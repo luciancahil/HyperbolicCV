@@ -8,6 +8,7 @@ class CosSimScheduler(LRScheduler):
     phi = (1 + math.sqrt(5)) / 2
     increase_gamma = 1.1
     decrease_gamma = 0.2
+    loss_ratio = 1
 
     def __init__(self, optimizer: Optimizer, last_epoch=-1):
         super(CosSimScheduler, self).__init__(optimizer, last_epoch)
@@ -26,11 +27,11 @@ class CosSimScheduler(LRScheduler):
 
 
     def get_lr(self):
-
-        if(self.cos_sim is None):
+        print(self.loss_ratio)
+        if(self.loss_ratio > 2):
+            gamma = 0.001
+        elif(self.cos_sim is None):
             gamma = 1
-        elif(self.loss_ratio > 2):
-            gamma = 0.01
         elif(self.cos_sim > -0.1):
             gamma = self.increase_gamma
         else:
