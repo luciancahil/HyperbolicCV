@@ -1,29 +1,28 @@
 # python code/classification/train.py -c classification/config/E-ResNet18.txt
 
 # Output settings
-exp_name = debugging
+exp_name = {}
 output_dir = classification/output
 checkpoint_dir = classification/checkpoints
 
 # General settings
-device = cpu
+device = cuda:0
 dtype = float32
-seed = 1
-#load_checkpoint = classification/output/E-ResNet18.pth
+seed = {}
 
 # General training hyperparameters
 num_epochs = 300
-batch_size = 32
-lr = 1e-3
+batch_size = 128
+lr = {}
 weight_decay = 5e-4
 optimizer = Adam
 
 
 # :LR scheduling hyperparameters
 # choices=[None, "cosine", "step", "exponential", "plateau", "cos_sim"]
-lr_type = plateau
-lr_epochs = 2
-lr_factor = 0.1
+lr_type = {}
+lr_epochs = {}
+lr_factor = {}
 
 
 # General validation/testing hyperparameters
@@ -31,13 +30,9 @@ batch_size_test = 128
 
 # Model selection
 num_layers = 18
-embedding_dim = 16
+embedding_dim = 512
 encoder_manifold = euclidean
 decoder_manifold = euclidean
 
 # Dataset settings
-dataset = CIFAR-10 # CIFAR-10 or Tiny-ImageNet or CIFAR-100
-
-
-# How many samples we use for debugging
-train_size = 64
+dataset = {} # CIFAR-100 or CIFAR-10 or Tiny-ImageNet
