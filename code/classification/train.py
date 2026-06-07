@@ -292,17 +292,11 @@ def main(args):
 
 
 
-            """print(
+            print(
                 "Epoch {}/{}: Loss={:.4f}, Acc@1={:.4f}, Acc@5={:.4f}, Validation: Loss={:.4f}, Acc@1={:.4f}, Acc@5={:.4f}, CoSim={:.4f}, LR={:.4e}".format(
                     epoch + 1, args.num_epochs, losses.avg, acc1.avg, acc5.avg, loss_val, acc1_val, acc5_val,  cosine_sim if cosine_sim is not None else float("nan"), lr_scheduler.get_last_lr()[0]  if lr_scheduler is not None else args.lr))
-            """
 
-            print(
-                f"metric={loss_val:.6f}, "
-                f"best={lr_scheduler.best:.6f}, "
-                f"bad_epochs={lr_scheduler.num_bad_epochs}, "
-                f"lr={optimizer.param_groups[0]['lr']}"
-            )
+
 
             # Testing for best model
             if acc1_val > best_acc:
