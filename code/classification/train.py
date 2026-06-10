@@ -175,6 +175,8 @@ def main(args):
 
     checkpoint_path = os.path.join(args.checkpoint_dir, f"{args.exp_name}_checkpoint.pth")
 
+    last_checkpoint_loss = 10e10
+
     if(args.checkpoint_dir is not None and not os.path.exists(args.checkpoint_dir)):
         print("Create missing checkpoint directory...")
         os.mkdir(args.checkpoint_dir)
@@ -209,6 +211,7 @@ def main(args):
 
     loss_list.append(max(losses.avg, 1e-10)) # Add current loss to loss list for loss ratio calculation, avoid division by zero with small constant
 
+
     for epoch in range(start_epoch, args.num_epochs):
         if(epoch % 20 == 0):
             checkpoint_state_dict = copy.deepcopy(model.state_dict())
@@ -216,6 +219,7 @@ def main(args):
             if(args.checkpoint_dir is not None):
                 torch.save(checkpoint_state_dict, checkpoint_path)
                 print("Saved checkpoint to " + checkpoint_path)
+                last_checkpoint_loss = losses.avg
 
         cur_gradients = None 
         model.train()
@@ -263,8 +267,8 @@ def main(args):
         # ------- Start validation and logging -------
         loss_list.append(max(losses.avg, 1e-10)) # Add current loss to loss list for loss ratio calculation, avoid division by zero with small constant
         with torch.no_grad():
-            loss_ratio = loss_list[-1]/loss_list[-2]
-
+            last_loss = loss_list[-1]
+            loss_ratio = max(last_loss/loss_list[-2], last_loss/last_checkpoint_loss)
             loss_val, acc1_val, acc5_val = evaluate(model, val_loader, criterion, device)
             if(loss_ratio > 2):
                 model.load_state_dict(checkpoint_state_dict)
@@ -276,9 +280,6 @@ def main(args):
                 # Get cosine similarity of gradients for manifold parameters
                 # cos_sim = optimizer.param_groups[1]['params'][0].grad.cosine_similarity(optimizer.param_groups[1]['params'][0], dim=0).item()
                 lr_scheduler.cos_step(cosine_sim, loss_ratio)
-
-
-
             elif isinstance(lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
                 print("plateau scheduler step with loss_val = {:.4f}".format(loss_val))
                 lr_scheduler.step(loss_val, epoch=epoch)
