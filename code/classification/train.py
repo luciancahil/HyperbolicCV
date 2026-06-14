@@ -174,8 +174,9 @@ def main(args):
     cosine_sim = None
 
     checkpoint_path = os.path.join(args.checkpoint_dir, f"{args.exp_name}_checkpoint.pth")
+    best_checkpoint_path = os.path.join(args.checkpoint_dir, f"{args.exp_name}_best_checkpoint.pth")
 
-    last_checkpoint_loss = 10e10
+    best_checkpoint_loss = 10e10
 
     if(args.checkpoint_dir is not None and not os.path.exists(args.checkpoint_dir)):
         print("Create missing checkpoint directory...")
@@ -219,7 +220,8 @@ def main(args):
             if(args.checkpoint_dir is not None):
                 torch.save(checkpoint_state_dict, checkpoint_path)
                 print("Saved checkpoint to " + checkpoint_path)
-                last_checkpoint_loss = losses.avg
+                if(losses.avg < best_checkpoint_loss):
+                    best_checkpoint_loss = losses.avg
 
         cur_gradients = None 
         model.train()
@@ -268,10 +270,10 @@ def main(args):
         loss_list.append(max(losses.avg, 1e-10)) # Add current loss to loss list for loss ratio calculation, avoid division by zero with small constant
         with torch.no_grad():
             last_loss = loss_list[-1]
-            loss_ratio = max(last_loss/loss_list[-2], last_loss/last_checkpoint_loss)
+            loss_ratio = max(last_loss/loss_list[-2], last_loss/best_checkpoint_loss)
             loss_val, acc1_val, acc5_val = evaluate(model, val_loader, criterion, device)
             if(loss_ratio > 2):
-                model.load_state_dict(checkpoint_state_dict)
+                model.load_state_dict(best_checkpoint_path if os.path.exists(best_checkpoint_path) else checkpoint_state_dict, strict=False)
                 print("Loss increased by more than 2x. Returning to previous model checkpoint.")
                 loss_list = loss_list[:-1] # Remove the last loss value which caused the increase for the next loss ratio calculation
 

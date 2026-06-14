@@ -1,7 +1,10 @@
 schedulers = {
+    "cos_sim": ([1], [1])}
+
+"""schedulers = {
+    "cos_sim": ([1], [1]),
     "None": ([1], [1]),
     "cosine": ([1], [1]),
-    "cos_sim": ([1], [1]),
 
     "step": (
         [100, 150],
@@ -17,10 +20,10 @@ schedulers = {
         [10, 20],
         [0.1]
     )
-}
+}"""
              
 
-datasets = ["CIFAR-10", "CIFAR-100", "Tiny-ImageNet"]
+datasets = ["Tiny-ImageNet"] #["CIFAR-10", "CIFAR-100", "Tiny-ImageNet"]
 lrs = [10**i for i in range(-9, 1, 3)]
 lrs.append(0.1)
 

@@ -16,3 +16,4 @@
 *.html
 
 code/classification/config/Exp*
+code/classification/config/varied_archive
