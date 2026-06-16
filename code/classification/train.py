@@ -169,6 +169,7 @@ def main(args):
 
     last_gradients = None
     gradient_cosines = []
+    learning_rates = [args.lr]
     loss_list = [10e10, 10e10] # Start with a very high loss for the first loss ratio calculation
 
 
@@ -325,6 +326,7 @@ def main(args):
                 "Epoch {}/{}: Loss={:.4f}, Acc@1={:.4f}, Acc@5={:.4f}, Validation: Loss={:.4f}, Acc@1={:.4f}, Acc@5={:.4f}, CoSim={:.4f}, LR={:.4e}".format(
                     epoch + 1, args.num_epochs, losses.avg, acc1.avg, acc5.avg, loss_val, acc1_val, acc5_val,  cosine_sim if cosine_sim is not None else float("nan"), lr_scheduler.get_last_lr()[0]  if lr_scheduler is not None else args.lr))
 
+            learning_rates.append(np.log(optimizer.param_groups[0]['lr']))
 
 
             # Testing for best model
@@ -369,6 +371,8 @@ def main(args):
 
     print(gradient_cosines)
     print(loss_list[2:]) # Skip the first two loss values which are just placeholders for the initial loss ratio calculation
+    print("Learning Rates:")
+    print(learning_rates)
 
     print("Testing best model...")
     if args.output_dir is not None:
