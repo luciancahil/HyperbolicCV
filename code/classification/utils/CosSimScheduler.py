@@ -17,7 +17,7 @@ class CosSimScheduler(LRScheduler):
         self.optimizer = optimizer
 
 
- 
+
 
     def cos_step(self, cos_sim=None, loss_ratio = 0, old_lr=None):
         self.cos_sim = cos_sim

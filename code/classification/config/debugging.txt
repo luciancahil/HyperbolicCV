@@ -14,7 +14,7 @@ seed = 1
 # General training hyperparameters
 num_epochs = 300
 batch_size = 32
-lr = 1e-3
+lr = 1e1
 weight_decay = 5e-4
 optimizer = Adam
 

@@ -186,7 +186,7 @@ def main(args):
         os.mkdir(args.checkpoint_dir)
     else:
         if(os.path.exists(checkpoint_path)):
-            model.load_state_dict(torch.load(checkpoint_path), strict=False)
+            model.load_state_dict(torch.load(checkpoint_path))
             print("Loaded checkpoint from " + checkpoint_path)
         
     losses = AverageMeter("Loss", ":.4e")
@@ -195,6 +195,8 @@ def main(args):
 
 
     model.eval()
+    # has any epoch improved the model since the last checkpoint? If not, we will return to the best checkpoint and adjust the learning rate accordingly.
+    has_improved = True
 
 
     for i, (x, y) in tqdm(enumerate(train_loader)):
@@ -229,14 +231,19 @@ def main(args):
                     torch.save(optimizer.state_dict(), best_checkpoint_optimizer)
                     best_checkpoint_loss = losses.avg
                     best_checkpoint_lr = optimizer.param_groups[0]['lr']
-                else:
-                    model.load_state_dict(torch.load(best_checkpoint_path), strict=False)
+                
+                if not has_improved:
+                    model.load_state_dict(torch.load(best_checkpoint_path))
                     optimizer.load_state_dict(torch.load(best_checkpoint_optimizer))
-                    print("Model did not improve since last checkpoint, returning to best checkpoint.")
+                    print("No epoch has outperformed the best checkpoint, returning to best checkpoint.")
                     if isinstance(lr_scheduler, CosSimScheduler):
                         lr_scheduler.cos_step(cos_sim=None, loss_ratio=loss_list[-1]/best_checkpoint_loss, old_lr=best_checkpoint_lr)
                         # change best_checkpoint lr to current lr to avoid repeating ourselves
                         best_checkpoint_lr = optimizer.param_groups[0]['lr']
+
+            has_improved = False
+
+        print("Has improved since last checkpoint: " + str(has_improved))
 
         cur_gradients = None 
         model.train()
@@ -288,7 +295,7 @@ def main(args):
             loss_ratio = max(last_loss/loss_list[-2], last_loss/best_checkpoint_loss)
             loss_val, acc1_val, acc5_val = evaluate(model, val_loader, criterion, device)
             if(loss_ratio > 2):
-                model.load_state_dict(torch.load(best_checkpoint_path if os.path.exists(best_checkpoint_path) else checkpoint_state_dict), strict=False)
+                model.load_state_dict(torch.load(best_checkpoint_path if os.path.exists(best_checkpoint_path) else checkpoint_state_dict))
                 optimizer.load_state_dict(torch.load(best_checkpoint_optimizer) if os.path.exists(best_checkpoint_optimizer) else optimizer.state_dict())
                 print("Loss increased by more than 2x. Returning to previous model checkpoint.")
                 loss_list = loss_list[:-1] # Remove the last loss value which caused the increase for the next loss ratio calculation
@@ -297,10 +304,8 @@ def main(args):
             if isinstance(lr_scheduler, CosSimScheduler):
                 # Get cosine similarity of gradients for manifold parameters
                 # cos_sim = optimizer.param_groups[1]['params'][0].grad.cosine_similarity(optimizer.param_groups[1]['params'][0], dim=0).item()
-                if(loss_ratio <= 2):
-                    lr_scheduler.cos_step(cosine_sim, loss_ratio)
-                else:
-                    lr_scheduler.cos_step(cos_sim=None, loss_ratio=loss_ratio, old_lr=best_checkpoint_lr)
+                lr_scheduler.cos_step(cosine_sim, loss_ratio)
+                
             elif isinstance(lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
                 print("plateau scheduler step with loss_val = {:.4f}".format(loss_val))
                 lr_scheduler.step(loss_val, epoch=epoch)
@@ -311,6 +316,8 @@ def main(args):
 
                 lr_scheduler.step(epoch)
             
+            if losses.avg <= best_checkpoint_loss:
+                has_improved = True
 
 
             print("Best Checkpoint loss = {:.4f}, with LR={:.4e}".format(best_checkpoint_loss, best_checkpoint_lr))
