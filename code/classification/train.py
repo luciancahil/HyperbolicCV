@@ -1,6 +1,7 @@
 # -----------------------------------------------------
 # Change working directory to parent HyperbolicCV/code
 from ast import parse
+from datetime import datetime
 import os
 import sys
 import copy
@@ -175,6 +176,8 @@ def main(args):
 
     checkpoint_path = os.path.join(args.checkpoint_dir, f"{args.exp_name}_checkpoint.pth")
     best_checkpoint_path = os.path.join(args.checkpoint_dir, f"{args.exp_name}_best_checkpoint.pth")
+    best_checkpoint_optimizer = os.path.join(args.checkpoint_dir, f"{args.exp_name}_best_optimizer.pth")
+    best_checkpoint_lr = args.lr
 
     best_checkpoint_loss = 10e10
 
@@ -212,6 +215,7 @@ def main(args):
 
     loss_list.append(max(losses.avg, 1e-10)) # Add current loss to loss list for loss ratio calculation, avoid division by zero with small constant
 
+    print(f"Starting at Date and Time {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     for epoch in range(start_epoch, args.num_epochs):
         if(epoch % 20 == 0):
@@ -220,8 +224,19 @@ def main(args):
             if(args.checkpoint_dir is not None):
                 torch.save(checkpoint_state_dict, checkpoint_path)
                 print("Saved checkpoint to " + checkpoint_path)
-                if(losses.avg < best_checkpoint_loss):
+                if(losses.avg <= best_checkpoint_loss):
+                    torch.save(checkpoint_state_dict, best_checkpoint_path)
+                    torch.save(optimizer.state_dict(), best_checkpoint_optimizer)
                     best_checkpoint_loss = losses.avg
+                    best_checkpoint_lr = optimizer.param_groups[0]['lr']
+                else:
+                    model.load_state_dict(torch.load(best_checkpoint_path), strict=False)
+                    optimizer.load_state_dict(torch.load(best_checkpoint_optimizer))
+                    print("Model did not improve since last checkpoint, returning to best checkpoint.")
+                    if isinstance(lr_scheduler, CosSimScheduler):
+                        lr_scheduler.cos_step(cos_sim=None, loss_ratio=loss_list[-1]/best_checkpoint_loss, old_lr=best_checkpoint_lr)
+                        # change best_checkpoint lr to current lr to avoid repeating ourselves
+                        best_checkpoint_lr = optimizer.param_groups[0]['lr']
 
         cur_gradients = None 
         model.train()
@@ -273,7 +288,8 @@ def main(args):
             loss_ratio = max(last_loss/loss_list[-2], last_loss/best_checkpoint_loss)
             loss_val, acc1_val, acc5_val = evaluate(model, val_loader, criterion, device)
             if(loss_ratio > 2):
-                model.load_state_dict(best_checkpoint_path if os.path.exists(best_checkpoint_path) else checkpoint_state_dict, strict=False)
+                model.load_state_dict(torch.load(best_checkpoint_path if os.path.exists(best_checkpoint_path) else checkpoint_state_dict), strict=False)
+                optimizer.load_state_dict(torch.load(best_checkpoint_optimizer) if os.path.exists(best_checkpoint_optimizer) else optimizer.state_dict())
                 print("Loss increased by more than 2x. Returning to previous model checkpoint.")
                 loss_list = loss_list[:-1] # Remove the last loss value which caused the increase for the next loss ratio calculation
 
@@ -281,7 +297,10 @@ def main(args):
             if isinstance(lr_scheduler, CosSimScheduler):
                 # Get cosine similarity of gradients for manifold parameters
                 # cos_sim = optimizer.param_groups[1]['params'][0].grad.cosine_similarity(optimizer.param_groups[1]['params'][0], dim=0).item()
-                lr_scheduler.cos_step(cosine_sim, loss_ratio)
+                if(loss_ratio <= 2):
+                    lr_scheduler.cos_step(cosine_sim, loss_ratio)
+                else:
+                    lr_scheduler.cos_step(cos_sim=None, loss_ratio=loss_ratio, old_lr=best_checkpoint_lr)
             elif isinstance(lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
                 print("plateau scheduler step with loss_val = {:.4f}".format(loss_val))
                 lr_scheduler.step(loss_val, epoch=epoch)
@@ -294,7 +313,7 @@ def main(args):
             
 
 
-
+            print("Best Checkpoint loss = {:.4f}, with LR={:.4e}".format(best_checkpoint_loss, best_checkpoint_lr))
             print(
                 "Epoch {}/{}: Loss={:.4f}, Acc@1={:.4f}, Acc@5={:.4f}, Validation: Loss={:.4f}, Acc@1={:.4f}, Acc@5={:.4f}, CoSim={:.4f}, LR={:.4e}".format(
                     epoch + 1, args.num_epochs, losses.avg, acc1.avg, acc5.avg, loss_val, acc1_val, acc5_val,  cosine_sim if cosine_sim is not None else float("nan"), lr_scheduler.get_last_lr()[0]  if lr_scheduler is not None else args.lr))
@@ -318,6 +337,8 @@ def main(args):
         # ------- End validation and logging -------
 
     print("-----------------\nTraining finished\n-----------------")
+    print(f"Finished at Date and Time {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
     print("Best epoch = {}, with Acc@1={:.4f}".format(best_epoch, best_acc))
 
     if args.output_dir is not None:

@@ -9,6 +9,7 @@ class CosSimScheduler(LRScheduler):
     increase_gamma = 1.1
     decrease_gamma = 0.2
     loss_ratio = 1
+    old_lr = None
 
     def __init__(self, optimizer: Optimizer, last_epoch=-1):
         super(CosSimScheduler, self).__init__(optimizer, last_epoch)
@@ -18,17 +19,22 @@ class CosSimScheduler(LRScheduler):
 
  
 
-    def cos_step(self, cos_sim=None, loss_ratio = 0):
+    def cos_step(self, cos_sim=None, loss_ratio = 0, old_lr=None):
         self.cos_sim = cos_sim
+        self.old_lr = old_lr
         self.loss_ratio = loss_ratio
         self.step()
         self.cos_sim = None
         self.loss_ratio = None
+        self.old_lr = None
 
 
     def get_lr(self):
-        print(self.loss_ratio)
-        if(self.loss_ratio > 2):
+        
+        if(self.old_lr is not None):
+            current_lr = [group['lr'] for group in self.optimizer.param_groups][0]
+            gamma = (self.old_lr / current_lr) / 10
+        elif(self.loss_ratio > 2):
             gamma = 0.001
         elif(self.cos_sim is None):
             gamma = 1
