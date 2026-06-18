@@ -33,7 +33,7 @@ class CosSimScheduler(LRScheduler):
         
         if(self.old_lr is not None):
             current_lr = [group['lr'] for group in self.optimizer.param_groups][0]
-            gamma = (self.old_lr / current_lr) / 10
+            gamma = (self.old_lr / current_lr) / 1000
         elif(self.loss_ratio > 2):
             gamma = 0.001
         elif(self.cos_sim is None):

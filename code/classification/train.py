@@ -109,6 +109,9 @@ def getArguments():
     parser.add_argument('--clip_features', default=1.0, type=float,
                         help="Clipping parameter for hybrid HNNs proposed by Guo et al. (2022)")
 
+    parser.add_argument('--checkpoint_frequency', default=20, type=int,
+                        help="Frequency of checkpointing during training.")
+
     # Dataset settings
     parser.add_argument('--dataset', default='CIFAR-100', type=str,
                         choices=["MNIST", "CIFAR-10", "CIFAR-100", "Tiny-ImageNet"],
@@ -199,6 +202,7 @@ def main(args):
     # has any epoch improved the model since the last checkpoint? If not, we will return to the best checkpoint and adjust the learning rate accordingly.
     has_improved = True
 
+    
 
     for i, (x, y) in tqdm(enumerate(train_loader)):
         # ------- Start iteration -------
@@ -220,8 +224,13 @@ def main(args):
 
     print(f"Starting at Date and Time {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-    for epoch in range(1 + start_epoch, 1+ args.num_epochs):
-        if(epoch % 20 == 0):
+
+    needed_improvements_epochs = 0.3 * args.checkpoint_frequency # If the model has not improved for 30% of the checkpoint frequency, we will return to the best checkpoint and adjust the learning rate accordingly.
+
+    num_improved_epochs = args.checkpoint_frequency # start with the assumption that the model has improved for the first epochs to avoid returning to the checkpoint too early
+
+    for epoch in range(start_epoch, args.num_epochs):
+        if(epoch % args.checkpoint_frequency == 0):
             checkpoint_state_dict = copy.deepcopy(model.state_dict())
 
             if(args.checkpoint_dir is not None):
@@ -233,18 +242,18 @@ def main(args):
                     best_checkpoint_loss = losses.avg
                     best_checkpoint_lr = optimizer.param_groups[0]['lr']
                 
-                if not has_improved:
+                if num_improved_epochs < needed_improvements_epochs:
                     model.load_state_dict(torch.load(best_checkpoint_path))
                     optimizer.load_state_dict(torch.load(best_checkpoint_optimizer))
-                    print("No epoch has outperformed the best checkpoint, returning to best checkpoint.")
+                    print("Fewer than 30% of epochs since last checkpoint have improved the model. Returning to previous model checkpoint.")
                     if isinstance(lr_scheduler, CosSimScheduler):
                         lr_scheduler.cos_step(cos_sim=None, loss_ratio=loss_list[-1]/best_checkpoint_loss, old_lr=best_checkpoint_lr)
                         # change best_checkpoint lr to current lr to avoid repeating ourselves
                         best_checkpoint_lr = optimizer.param_groups[0]['lr']
 
-            has_improved = False
+            num_improved_epochs = 0
 
-        print("Has improved since last checkpoint: " + str(has_improved))
+        print("Epochs that were improvements: " + str(num_improved_epochs) + "/" + str(needed_improvements_epochs))
 
         cur_gradients = None 
         model.train()
@@ -300,7 +309,8 @@ def main(args):
                 optimizer.load_state_dict(torch.load(best_checkpoint_optimizer) if os.path.exists(best_checkpoint_optimizer) else optimizer.state_dict())
                 print("Loss increased by more than 2x. Returning to previous model checkpoint.")
                 loss_list = loss_list[:-1] # Remove the last loss value which caused the increase for the next loss ratio calculation
-
+            elif(last_loss < loss_list[-2]):
+                num_improved_epochs += 1
 
             if isinstance(lr_scheduler, CosSimScheduler):
                 # Get cosine similarity of gradients for manifold parameters
@@ -321,7 +331,6 @@ def main(args):
                 has_improved = True
 
 
-            print("Best Checkpoint loss = {:.4f}, with LR={:.4e}".format(best_checkpoint_loss, best_checkpoint_lr))
             print(
                 "Epoch {}/{}: Loss={:.4f}, Acc@1={:.4f}, Acc@5={:.4f}, Validation: Loss={:.4f}, Acc@1={:.4f}, Acc@5={:.4f}, CoSim={:.4f}, LR={:.4e}".format(
                     epoch + 1, args.num_epochs, losses.avg, acc1.avg, acc5.avg, loss_val, acc1_val, acc5_val,  cosine_sim if cosine_sim is not None else float("nan"), lr_scheduler.get_last_lr()[0]  if lr_scheduler is not None else args.lr))
