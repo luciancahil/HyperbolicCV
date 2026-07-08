@@ -1,8 +1,10 @@
 schedulers = {
-    "cos_sim": ([1], [1])}
 
-"""schedulers = {
-    "cos_sim": ([1], [1]),
+    "exponential": (
+        [1],
+        [0.99]
+    )}
+"""    "cos_sim": ([1], [1]),
     "None": ([1], [1]),
     "cosine": ([1], [1]),
 
@@ -10,13 +12,8 @@ schedulers = {
         [100, 150],
         [0.1, 0.2]
     ),
-
-    "exponential": (
-        [1],
-        [0.99, 0.97, 0.95]
-    ),
-
-    "plateau": (
+    """
+""""plateau": (
         [10, 20],
         [0.1]
     )
@@ -27,7 +24,7 @@ datasets = ["Tiny-ImageNet"] #["CIFAR-10", "CIFAR-100", "Tiny-ImageNet"]
 lrs = [10**i for i in range(-9, 1, 3)]
 lrs.append(0.1)
 
-seeds = [i for i in range(1, 4)]
+seeds = [2]#[i for i in range(1, 4)]
 
 original_text = open("Empty.txt")
 original_text = original_text.read()

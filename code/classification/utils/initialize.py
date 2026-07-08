@@ -105,7 +105,7 @@ def select_optimizer(model, args):
     elif args.lr_type == 'plateau':
         lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=args.lr_factor, patience=args.lr_epochs)
     elif args.lr_type == 'cos_sim':
-        lr_scheduler = CosSimScheduler(optimizer)
+        lr_scheduler = CosSimScheduler(optimizer, catastrophic_gamma=args.lr_factor)
         
 
     return optimizer, lr_scheduler

@@ -331,6 +331,7 @@ def main(args):
                 has_improved = True
 
 
+            print(f"Best Checkpoint learning rate: {best_checkpoint_lr:.4e}")
             print(
                 "Epoch {}/{}: Loss={:.4f}, Acc@1={:.4f}, Acc@5={:.4f}, Validation: Loss={:.4f}, Acc@1={:.4f}, Acc@5={:.4f}, CoSim={:.4f}, LR={:.4e}".format(
                     epoch + 1, args.num_epochs, losses.avg, acc1.avg, acc5.avg, loss_val, acc1_val, acc5_val,  cosine_sim if cosine_sim is not None else float("nan"), lr_scheduler.get_last_lr()[0]  if lr_scheduler is not None else args.lr))

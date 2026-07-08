@@ -11,11 +11,11 @@ class CosSimScheduler(LRScheduler):
     loss_ratio = 1
     old_lr = None
 
-    def __init__(self, optimizer: Optimizer, last_epoch=-1):
+    def __init__(self, optimizer: Optimizer, catastrophic_gamma = 0.001, last_epoch=-1):
         super(CosSimScheduler, self).__init__(optimizer, last_epoch)
 
         self.optimizer = optimizer
-
+        self.catastrophic_gamma = catastrophic_gamma
 
 
 
@@ -33,12 +33,12 @@ class CosSimScheduler(LRScheduler):
         
         if(self.old_lr is not None):
             current_lr = [group['lr'] for group in self.optimizer.param_groups][0]
-            gamma = (self.old_lr / current_lr) / 1000
+            gamma = (self.old_lr / current_lr) * self.catastrophic_gamma
         elif(self.loss_ratio > 2):
-            gamma = 0.001
+            gamma = self.catastrophic_gamma
         elif(self.cos_sim is None):
             gamma = 1
-        elif(self.cos_sim > -0.1):
+        elif(self.cos_sim > -1.1):
             gamma = self.increase_gamma
         else:
             gamma = self.decrease_gamma

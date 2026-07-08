@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --time=96:00:00
+#SBATCH --time=24:00:00
 #SBATCH --account=def-kleinke
-#SBATCH --mem=256G
 #SBATCH --nodes=1
+#SBATCH --gpus-per-node=h100:1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --job-name=BaLaCuSe3_dos
@@ -22,10 +22,14 @@ module load cuda/12.6
 echo "Hello!"
 
 
-i=1
-while IFS= read -r config_name; do
-  apptainer exec   /home/royhe62/scratch/sifs/hcnn.sif python code/classification/train.py -c "classification/config/${config_name}" \
-    > "outputs/exp_${i}.txt" 2>&1
+i=2
 
-  i=$((i + 1))
-done < config_list.txt
+while IFS= read -r config_name <&3; do
+    srun apptainer exec --nv /home/royhe62/scratch/sifs/hcnn.sif \
+        conda run --no-capture-output -n HCNN \
+        python code/classification/train.py \
+        -c "classification/config/${config_name}" \
+        > "outputs/exp_${i}.txt" 2>&1
+
+    ((i++))
+done 3< config_list_small.txt
