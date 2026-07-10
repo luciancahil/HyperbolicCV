@@ -75,8 +75,8 @@ def getArguments():
     parser.add_argument('--lr_factor', default=0.1, type=float,
                         help="Factor for learning rate reduction in LR scheduler. Only used for step, exponential and plateau LR schedulers.")
     
-    parser.add_argument('--lr_epochs', default=10, type=int,
-                        help="Epochs when learning rate is reduced by factor in step LR scheduler or when validation loss plateaus in plateau LR scheduler.")
+    parser.add_argument('--lr_epochs', default=10, type=float,
+                        help="Epochs when learning rate is reduced by factor in step LR scheduler or when validation loss plateaus in plateau LR scheduler, as well as how much we increase in cos_sim LR scheduler.")
 
     parser.add_argument('--use_lr_scheduler', action='store_true',
                         help="If learning rate should be reduced after step epochs using a LR scheduler.")

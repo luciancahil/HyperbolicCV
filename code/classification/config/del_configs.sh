@@ -1,0 +1,1 @@
+rm Exp*.txt

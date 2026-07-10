@@ -11,10 +11,11 @@ class CosSimScheduler(LRScheduler):
     loss_ratio = 1
     old_lr = None
 
-    def __init__(self, optimizer: Optimizer, catastrophic_gamma = 0.001, last_epoch=-1):
+    def __init__(self, optimizer: Optimizer, catastrophic_gamma = 0.001, increase_gamma=1.1, last_epoch=-1):
         super(CosSimScheduler, self).__init__(optimizer, last_epoch)
 
         self.optimizer = optimizer
+        self.increase_gamma = increase_gamma
         self.catastrophic_gamma = catastrophic_gamma
 
 
