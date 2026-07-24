@@ -11,6 +11,10 @@
 *.pyc
 *.tar
 
+outputs/*
+images/
+!outputs/process_outputs.py
+
 *.m
 *.gz
 *.html
